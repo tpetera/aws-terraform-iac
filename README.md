@@ -1,4 +1,4 @@
-# AWS EC2 IaC with Terrafrom and GitHub Actions
+# AWS EC2 IaC with Terraform and GitHub Actions
 
 ## Project goal
 
@@ -14,7 +14,7 @@ This project leverages GitHub Actions for fully automated infrastructure deploym
 ## Amazon AWS, preparation
 
 **Prerequisites and preparation steps:**
-- [ ] [[register AWS free tier account]]
+- [ ] Register AWS free tier account
 - [ ] Setup SSH key pair for  local-to-EC2 SSH login (though we use SSM in this project, so optional)
 - [ ] Create S3 bucket for Terraform State file storage
 - [ ] Create DynamoDB table for Terraform State locking
@@ -29,8 +29,8 @@ SSH login from localhost to EC2 Instance after server provision. (not needed if 
 AWS Console > EC2 Service > Network & Security > Key Pairs > Create
 
 Name: `london-srv1-admin-key` *(name can be anything)*
-type: RSA
-key: .pem (for OpenSSH)
+type: `RSA`
+key: `.pem` (for OpenSSH)
 
 *(store private key in a secure place eg.: .ssh folder)*
 ### S3 Bucket setup for Terraform State file storage
@@ -42,15 +42,15 @@ store state file `terraform.tfstate` in a remote location.
 AWS Console > S3 Service > Create Bucket
 
 Name: `tp-tfstate-london-bucket1`
-Object ownership: ACLs disabled (recommended)
-Block all public access
-Bucket versioning: Enable
-Default Encryption: Server-side encryption with Amazon S3 managed keys (SSE-S3)
-Bucket Key: Enabled
+Object ownership: `ACLs disabled (recommended)`
+`Block all public access`
+Bucket versioning: `Enable`
+Default Encryption: `Server-side encryption with Amazon S3 managed keys (SSE-S3)`
+Bucket Key: `Enabled`
 
 ### Create a DynamoDB Table for Terraform State Locking
 
-**Purpose:** 
+**Purpose:**
 Lock state file avoid paralell updating.
 
 **How to create:**
@@ -58,7 +58,7 @@ AWS Console > DynamoDB service > create table
 
 name: `tp-tfstatelocks-1`
 Partition key: `LockID` *(case sensitive!)* , String
-table settings: default
+table settings: `default`
 
 ### Create IAM User, role Policy and access key for GitHub Actions
 
