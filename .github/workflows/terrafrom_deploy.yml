@@ -1,0 +1,106 @@
+# .github/workflows/terraform_deploy.yml
+
+# Name of the GitHub Actions workflow. This will be displayed on the Actions tab of your repository.
+name: 'Terraform Deploy to AWS DevOps task 1'
+
+# Controls when the workflow will run.
+on:
+  # Triggers the workflow on push events but only for the `main` branch.
+  # Adjust `main` if your primary branch has a different name (e.g., `master`).
+  push:
+    branches:
+      - main
+
+  # Triggers the workflow on pull request events targeted at the `main` branch.
+  # This is useful for running `terraform plan` to review changes before merging.
+  pull_request:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Defines the jobs that will run as part of the workflow.
+# We have one job named "terraform".
+jobs:
+  terraform:
+    name: 'Terraform Apply P1 Infrastructure'
+    # Specifies the type of runner that the job will run on.
+    # `ubuntu-latest` uses the latest available version of an Ubuntu Linux runner.
+    runs-on: ubuntu-latest
+
+    # Environment variables available to all steps in this job.
+    env:
+      # We set the AWS region here. This can be used by the AWS CLI and Terraform provider.
+      AWS_REGION: "eu-west-2" # London
+      # Terraform variables can be passed as environment variables prefixed with TF_VAR_
+      # These will be populated from GitHub Secrets.
+      TF_VAR_ami_id: ${{ secrets.TF_VAR_AMI_ID }}
+      TF_VAR_key_name: ${{ secrets.TF_VAR_KEY_NAME }}
+      # TF_VAR_your_ip_for_ssh was removed as we are focusing on SSM
+
+    # A sequence of steps that make up the job. Each step runs a command or an action.
+    steps:
+      # Step 1: Checkout code
+      # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+      - name: 'Checkout Repository Code'
+        uses: actions/checkout@v4 # Uses version 4 of the official checkout action.
+
+      # Step 2: Configure AWS Credentials
+      # This action configures AWS credentials and region, making them available to subsequent steps.
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }} # Uses the AWS_REGION defined in the job's env block.
+
+      # Step 3: Setup Terraform CLI
+      # This action downloads and installs a specific version of the Terraform CLI.
+      - name: 'Setup Terraform CLI'
+        uses: hashicorp/setup-terraform@v3
+        # with:
+        #   terraform_version: '1.7.5' # Optional: Pin to a specific Terraform version for consistency.
+                                      # If omitted, it usually installs the latest.
+
+      # Step 4: Terraform Init
+      # Initializes a new or existing Terraform working directory by downloading providers
+      # and configuring the backend (e.g., S3 backend).
+      # This assumes your `backend.tf` file is fully configured with bucket and table names.
+      - name: 'Terraform Init'
+        id: init # Gives this step an ID, useful if other steps need to refer to its output.
+        run: terraform init
+        # The AWS credentials configured in the previous step will be used automatically
+        # by Terraform to initialize the S3 backend.
+
+      # Step 5: Terraform Validate
+      # Validates the syntax and consistency of the Terraform configuration files.
+      - name: 'Terraform Validate'
+        id: validate
+        run: terraform validate
+
+      # Step 6: Terraform Plan
+      # Creates an execution plan. Terraform determines what actions are necessary
+      # to achieve the desired state specified in the configuration files.
+      # The plan is saved to a file (`tfplan`) for later use by `terraform apply`.
+      - name: 'Terraform Plan'
+        id: plan
+        run: terraform plan -no-color -input=false -out=tfplan
+        # -no-color: Disables color codes in output, which is better for logs.
+        # -input=false: Disables interactive prompts.
+        # -out=tfplan: Saves the generated plan to a file named "tfplan".
+
+      # Step 7: Terraform Apply
+      # Applies the changes required to reach the desired state of the configuration.
+      # This step will only run on push events to the `main` branch, not on pull requests.
+      - name: 'Terraform Apply'
+        id: apply
+        # This condition ensures that `terraform apply` only runs when:
+        # 1. The event is a `push` (not a pull request).
+        # 2. The push is to the `refs/heads/main` branch (i.e., your main branch).
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -input=false tfplan
+        # -auto-approve: Skips interactive approval of the plan. Use with caution;
+        #                in CI/CD, this is common after a plan has been reviewed (e.g., on a PR).
+        # -input=false: Disables interactive prompts.
+        # tfplan: Instructs Terraform to apply the plan saved from the `terraform plan` step.
