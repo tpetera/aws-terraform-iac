@@ -64,7 +64,7 @@
                 "dynamodb:PutItem",
                 "dynamodb:DeleteItem"
             ],
-            "Resource": "arn:aws:dynamodb:eu-west-2:<AWS-ACCOUNT-ID>:table/<DYNAMODB-TABLE-NAME>"
+            "Resource": "arn:aws:dynamodb:<AWS-REGION>:<AWS-ACCOUNT-ID>:table/<DYNAMODB-TABLE-NAME>"
         },
         {
             "Effect": "Allow",
