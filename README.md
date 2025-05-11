@@ -146,6 +146,7 @@ our-git-repository-folder/
 ├── .github/ <-- Create this folder 
 │   └── workflows/ <-- Create this folder inside .github 
 │       └── terraform_deploy.yml <-- Your GitHub Actions workflow file goes here 
+|       └── terraform_destroy.yml <-- Your GitHub Actions destroy workflow file goes here 
 ├── provider.tf <-- Terraform file 
 ├── variables.tf <-- Terraform file 
 ├── main.tf <-- Terraform file 
