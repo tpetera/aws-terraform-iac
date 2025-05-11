@@ -7,6 +7,8 @@ All by Terraform and GitHub Action as code.
 
 *(Although the code works in a prod  environment, the main goal of this project is DevOps automation learning.)*
 
+### Extended with Destroy Action (Manual run only)
+
 ## How it works
 
 This project leverages GitHub Actions for fully automated infrastructure deployment and management using Terraform. When changes to the Terraform code are pushed to the `main` branch, or a pull request targeting `main` is created, a predefined GitHub Actions workflow is automatically triggered. This workflow securely authenticates with AWS using credentials stored as GitHub Secrets. It then executes a series of Terraform commands: `init` to prepare the environment and backend, `validate` to check code syntax, and `plan` to preview changes. For pushes to `main`, the workflow proceeds to `apply` these changes, provisioning or updating the AWS infrastructure (VPC, EC2 server with Nginx/MySQL, SSM access) as defined in the code, ensuring a consistent and version-controlled environment.
@@ -151,4 +153,8 @@ our-git-repository-folder/
 ├── outputs.tf <-- Terraform file 
 └── backend.tf <-- Terraform file
 ```
+
+## Destroy the infrastructure
+
+To destroy the infrastructure, you cam amnually run Destroy workflow in GitHub Actions.
 

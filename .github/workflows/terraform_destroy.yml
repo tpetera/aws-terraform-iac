@@ -1,0 +1,71 @@
+# .github/workflows/terraform_destroy.yml
+
+# Name of the GitHub Actions workflow.
+name: 'Terraform Destroy AWS P1 Infrastructure (Manual)'
+
+# Controls when the workflow will run.
+on:
+  # Allows you to run this workflow manually from the Actions tab in GitHub.
+  # This is the recommended trigger for a destroy operation.
+  workflow_dispatch:
+    # Optional: Define inputs if you want to pass parameters when manually triggering.
+    # For a simple destroy, inputs are often not needed.
+    # inputs:
+    #   confirm_destroy:
+    #     description: 'Type "destroy-prod" to confirm destruction of production infrastructure'
+    #     required: true
+
+# Defines the jobs that will run as part of the workflow.
+jobs:
+  terraform_destroy:
+    name: 'Terraform Destroy P1 Infrastructure'
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: "eu-west-2" # London
+      # Terraform variables (from secrets) needed for `terraform plan -destroy` if your configuration
+      # requires them to resolve provider or resource configurations even for a destroy plan.
+      # Often, for destroy, only backend configuration and AWS credentials are strictly necessary.
+      TF_VAR_ami_id: ${{ secrets.TF_VAR_AMI_ID }}
+      TF_VAR_key_name: ${{ secrets.TF_VAR_KEY_NAME }}
+
+    steps:
+      - name: 'Checkout Repository Code'
+        uses: actions/checkout@v4
+
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 'Setup Terraform CLI'
+        uses: hashicorp/setup-terraform@v3
+        # with:
+        #   terraform_version: '1.7.5' # Optional: Pin version
+
+      - name: 'Terraform Init (for Backend)'
+        id: init
+        run: terraform init
+        # Assumes your backend.tf is fully configured.
+        # If using partial backend config, you'd pass -backend-config flags here too,
+        # using secrets for bucket, key, dynamodb_table.
+
+      # Optional but Recommended: Terraform Plan -Destroy
+      # This step shows you what resources Terraform intends to destroy.
+      # It's a good safety check before running the actual destroy command.
+      - name: 'Terraform Plan (Destroy)'
+        id: plan_destroy
+        run: terraform plan -destroy -no-color -input=false
+        # You could save this plan to an artifact if you want to review it more thoroughly.
+
+      # Terraform Destroy
+      # This step will delete all resources managed by this Terraform configuration.
+      # It uses -auto-approve because in an automated workflow, there's no interactive prompt.
+      # The manual `workflow_dispatch` trigger serves as the main confirmation.
+      - name: 'Terraform Destroy'
+        id: destroy
+        # Optional: Add a condition based on manual input if you defined inputs for workflow_dispatch
+        # if: github.event.inputs.confirm_destroy == 'destroy-prod'
+        run: terraform destroy -auto-approve -input=false
