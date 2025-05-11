@@ -42,7 +42,7 @@
                 "s3:ListBucket"
             ],
             "Resource": [
-                "arn:aws:s3:::<YOUR-BUCKET-NAME>"
+                "arn:aws:s3:::<BUCKET-NAME>"
             ]
         },
         {
@@ -53,7 +53,7 @@
                 "s3:DeleteObject"
             ],
             "Resource": [
-                "arn:aws:s3:::<YOUR-BUCKET-NAME>/*"
+                "arn:aws:s3:::<BUCKET-NAME>/*"
             ]
         },
         {
@@ -64,19 +64,36 @@
                 "dynamodb:PutItem",
                 "dynamodb:DeleteItem"
             ],
-            "Resource": "arn:aws:dynamodb:eu-west-2:<YOUR-AWS-ACCOUNTID>:table/<YOUR-DYNAMODB>"
+            "Resource": "arn:aws:dynamodb:eu-west-2:<AWS-ACCOUNT-ID>:table/<DYNAMODB-TABLE-NAME>"
         },
         {
             "Effect": "Allow",
             "Action": [
-                "iam:ListInstanceProfilesForRole"
+                "iam:CreateRole",
+                "iam:TagRole",
+                "iam:DeleteRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:GetRole",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:ListInstanceProfilesForRole",
+                "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:GetInstanceProfile",
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:TagInstanceProfile"
             ],
-            "Resource": "*"
+            "Resource": [
+                "arn:aws:iam::<AWS-ACCOUNT-ID>:role/EC2-SSM-Access-Role-P1",
+                "arn:aws:iam::<AWS-ACCOUNT-ID>:instance-profile/EC2-SSM-Instance-Profile-P1"
+            ]
         },
         {
             "Effect": "Allow",
             "Action": "iam:PassRole",
-            "Resource": "arn:aws:iam::<YOUR-AWS-ACCOUNTID>:role/*",
+            "Resource": "arn:aws:iam::<AWS-ACCOUNT-ID>:role/EC2-SSM-Access-Role-P1",
             "Condition": {
                 "StringEquals": {
                     "iam:PassedToService": "ec2.amazonaws.com"
